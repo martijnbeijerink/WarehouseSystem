@@ -1,0 +1,118 @@
+openapi: 3.0.0
+info:
+  title: SKU API
+  version: 1.0.0
+  description: API for defining and looking up SKU information
+servers:
+  - url: http://localhost:8080/api
+    description: Local server
+
+components:
+  schemas:
+    SKU:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        quantity:
+          type: integer
+      required:
+        - code
+        - name
+        - quantity
+
+paths:
+  /skus:
+    post:
+      summary: Create a new SKU
+      requestBody:
+        description: SKU object that needs to be added
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SKU'
+      responses:
+        '201':
+          description: SKU created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SKU'
+    get:
+      summary: List all SKUs
+      responses:
+        '200':
+          description: A list of SKUs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SKU'
+
+  /skus/{id}:
+    get:
+      summary: Get a SKU by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: SKU details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SKU'
+        '404':
+          description: SKU not found
+    put:
+      summary: Update an existing SKU
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: SKU object that needs to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SKU'
+      responses:
+        '200':
+          description: SKU updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SKU'
+        '404':
+          description: SKU not found
+    delete:
+      summary: Delete a SKU by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: SKU deleted
+        '404':
+          description: SKU not found
