@@ -6,4 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SkuRepository extends JpaRepository<Sku, Long> {
-    boolean existsByCode(String code);}
+    boolean existsBySku(String sku);}

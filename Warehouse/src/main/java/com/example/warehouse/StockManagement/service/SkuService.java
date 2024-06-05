@@ -28,7 +28,8 @@ public class SkuService {
         skuRepository.deleteById(id);
     }
 
-    public boolean existsByCode(String code) {
-        return skuRepository.existsByCode(code);
+    public boolean existBySku(String sku){
+        return skuRepository.existsBySku(sku);
     }
+
 }

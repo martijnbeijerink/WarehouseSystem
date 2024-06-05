@@ -46,7 +46,7 @@ public class OutboundOrder {
         return Sku;
     }
 
-    public void setProductCode(String productCode) {
+    public void setSku(String sku) {
         this.Sku = Sku;
     }
 

@@ -10,7 +10,7 @@ public class Sku {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String code;
+    private String sku;
     private String name;
     private String description;
     private int quantity;
@@ -18,8 +18,8 @@ public class Sku {
     public Sku() {
     }
 
-    public Sku(String code, String name, String description, int quantity) {
-        this.code = code;
+    public Sku(String sku, String name, String description, int quantity) {
+        this.sku = sku;
         this.name = name;
         this.description = description;
         this.quantity = quantity;
@@ -32,12 +32,12 @@ public class Sku {
         this.id = id;
     }
 
-    public String getCode() {
-        return code;
+    public String getsku() {
+        return sku;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setsku(String sku) {
+        this.sku = sku;
     }
 
     public String getName() {

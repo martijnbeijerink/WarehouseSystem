@@ -1,5 +1,6 @@
 package com.example.warehouse.StockManagement.controller;
 
+import com.example.warehouse.StockManagement.repository.SkuRepository;
 import com.example.warehouse.StockManagement.sku.Sku;
 import com.example.warehouse.StockManagement.service.SkuService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +41,9 @@ public class SkuController {
         skuService.deleteSku(id);
     }
 
-    @GetMapping("/exists/{code}")
+    @GetMapping("/exists/{sku}")
     @Operation(summary = "Check SKU exists")
-    public boolean skuExists(@PathVariable String code) {
-        return skuService.existsByCode(code);
+    public boolean skuExists(@PathVariable String sku){
+        return skuService.existBySku(sku);
     }
 }
