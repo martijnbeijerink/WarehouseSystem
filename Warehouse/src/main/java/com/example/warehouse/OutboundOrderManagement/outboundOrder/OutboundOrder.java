@@ -24,6 +24,7 @@ public class OutboundOrder {
         this.quantity = quantity;
     }
 
+
     // Getters and setters
 
     public Long getId() {
