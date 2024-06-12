@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>SKUs</title>
+</head>
+<body>
+<h1>SKUs</h1>
+<table>
+    <thead>
+    <tr>
+        <th>SKU</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Quantity</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="sku : ${skus}">
+        <td th:text="${sku.sku}">SKU</td>
+        <td th:text="${sku.name}">Name</td>
+        <td th:text="${sku.description}">Description</td>
+        <td th:text="${sku.quantity}">Quantity</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

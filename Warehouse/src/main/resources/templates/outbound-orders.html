@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Outbound Orders</title>
+</head>
+<body>
+<h1>Outbound Orders</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Order Number</th>
+        <th>Product Code</th>
+        <th>Quantity</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="order : ${orders}">
+        <td th:text="${order.orderNumber}">Order Number</td>
+        <td th:text="${order.productCode}">Product Code</td>
+        <td th:text="${order.quantity}">Quantity</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

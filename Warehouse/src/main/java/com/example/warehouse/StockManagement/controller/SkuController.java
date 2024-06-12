@@ -3,7 +3,10 @@ package com.example.warehouse.StockManagement.controller;
 import com.example.warehouse.StockManagement.repository.SkuRepository;
 import com.example.warehouse.StockManagement.sku.Sku;
 import com.example.warehouse.StockManagement.service.SkuService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +17,7 @@ import java.util.List;
 @RequestMapping("/api/skus")
 @Tag(name = "SKU Management", description = "APIs for managing SKUs")
 public class SkuController {
+    private static final Logger logger = LoggerFactory.getLogger(SkuController.class);
     @Autowired
     private SkuService skuService;
 
@@ -43,7 +47,8 @@ public class SkuController {
 
     @GetMapping("/exists/{sku}")
     @Operation(summary = "Check SKU exists")
-    public boolean skuExists(@PathVariable String sku){
-        return skuService.existBySku(sku);
+    public ResponseEntity<Boolean> skuExists(@PathVariable String sku) {
+        boolean exists = skuService.existsBySku(sku);
+        return ResponseEntity.ok(exists);
     }
 }

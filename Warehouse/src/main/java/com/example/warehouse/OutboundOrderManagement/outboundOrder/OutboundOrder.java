@@ -11,21 +11,12 @@ public class OutboundOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String sku;
     private String orderNumber;
-    private String Sku;
     private int quantity;
 
-    public OutboundOrder() {
-    }
-
-    public OutboundOrder(String orderNumber, String Sku, int quantity) {
-        this.orderNumber = orderNumber;
-        this.Sku = Sku;
-        this.quantity = quantity;
-    }
-
-
-    // Getters and setters
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -35,20 +26,20 @@ public class OutboundOrder {
         this.id = id;
     }
 
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
     public String getOrderNumber() {
         return orderNumber;
     }
 
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
-    }
-
-    public String getSku() {
-        return Sku;
-    }
-
-    public void setSku(String sku) {
-        this.Sku = Sku;
     }
 
     public int getQuantity() {
