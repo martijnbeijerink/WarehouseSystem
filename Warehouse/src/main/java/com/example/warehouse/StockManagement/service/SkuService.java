@@ -17,7 +17,7 @@ public class SkuService {
     }
 
     public Sku saveSku(Sku sku) {
-        return skuRepository.save(sku);
+        sku.setStatus("AVAILABLE"); return skuRepository.save(sku);
     }
 
     public Sku getSkuById(Long id) {

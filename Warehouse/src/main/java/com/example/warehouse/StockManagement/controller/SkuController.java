@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,4 +52,10 @@ public class SkuController {
         boolean exists = skuService.existsBySku(sku);
         return ResponseEntity.ok(exists);
     }
-}
+    // SKU UI
+//    @GetMapping("/supervisor/skus")
+//    public String listSkus(Model model) {
+//        List<Sku> skus = skuService.getAllSkus();
+//        model.addAttribute("skus", sku);
+//        return "sku-list";  // Ensure this matches your template name
+    }

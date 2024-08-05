@@ -14,6 +14,7 @@ public class Sku {
     private String name;
     private String description;
     private int quantity;
+    private String status; // Add status field
 
     public Sku() {
     }
@@ -62,5 +63,12 @@ public class Sku {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

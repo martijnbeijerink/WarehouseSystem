@@ -24,10 +24,12 @@ public class OutboundOrderService {
         logger.info("Checking SKU existence with URL: {}", skuCheckUrl);
 
         ResponseEntity<Boolean> response = restTemplate.getForEntity(skuCheckUrl, Boolean.class);
-        boolean skuExists = response.getBody();
+        logger.info("Response from SKU existence check: {}", response);
+
+        Boolean skuExists = response.getBody();
         logger.info("SKU exists response: {}", skuExists);
 
-        if (!skuExists) {
+        if (skuExists == null || !skuExists) {
             throw new RuntimeException("SKU does not exist");
         }
 
