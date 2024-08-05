@@ -1,40 +1,17 @@
 package com.example.warehouse.dao;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-@Component
+@Repository
 public class SkuAllocationDao {
 
-    @Value("${spring.datasource.url}")
-    private String dbUrl;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-    @Value("${spring.datasource.username}")
-    private String dbUsername;
-
-    @Value("${spring.datasource.password}")
-    private String dbPassword;
-
-    public void allocateSkuQuantity(Long orderId, String sku, int quantity) {
-        String procedureCall = "{call allocate_sku_quantity(?, ?, ?)}";
-
-        try (Connection connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             CallableStatement callableStatement = connection.prepareCall(procedureCall)) {
-
-            callableStatement.setLong(1, orderId);
-            callableStatement.setString(2, sku);
-            callableStatement.setInt(3, quantity);
-
-            callableStatement.execute();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error allocating SKU quantity", e);
-        }
+    public void allocateSkuQuantity(String sku, int quantity) {
+        String sql = "BEGIN allocate_sku_quantity(?, ?); END;";
+        jdbcTemplate.update(sql, sku, quantity);
     }
 }
