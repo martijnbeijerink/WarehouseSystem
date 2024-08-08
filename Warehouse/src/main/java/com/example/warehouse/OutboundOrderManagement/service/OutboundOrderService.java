@@ -36,9 +36,13 @@ public class OutboundOrderService {
         if (skuExists == null || !skuExists) {
             throw new RuntimeException("SKU does not exist");
         }
-        // Allocate SKU quantity using the DAO
-        skuAllocationDao.allocateSkuQuantity(order.getSku(), order.getQuantity());
-        return outboundOrderRepository.save(order);
+        // Save the order first
+        OutboundOrder savedOrder = outboundOrderRepository.save(order);
+
+        // Allocate SKU quantity and update order status to 'IN-PROGRESS'
+        skuAllocationDao.allocateSkuQuantity(savedOrder.getId(), order.getSku(), order.getQuantity());
+
+        return savedOrder;
     }
 
     public Object getAllOrders() {

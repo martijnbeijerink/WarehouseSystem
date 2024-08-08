@@ -15,6 +15,7 @@ public class OutboundOrder {
     private String sku;
     private String orderNumber;
     private int quantity;
+    private String status;
 
     // Getters and Setters
 
@@ -48,5 +49,13 @@ public class OutboundOrder {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
