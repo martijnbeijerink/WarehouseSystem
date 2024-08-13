@@ -1,12 +1,9 @@
 package com.example.warehouse.OutboundOrderManagement.outboundOrder;
 
-import com.example.warehouse.GoodsToPicker.entity.CartonItem;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.util.List;
 
 @Entity
 public class OutboundOrder {
@@ -21,15 +18,7 @@ public class OutboundOrder {
     private String status;
 
     // Getters and Setters
-    private List<CartonItem> items;
 
-    public List<CartonItem> getItems() {
-        return items;
-    }
-
-    public void setItems(List<CartonItem> items) {
-        this.items = items;
-    }
     public Long getId() {
         return id;
     }

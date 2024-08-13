@@ -5,11 +5,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LoadDatabase implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoadDatabase.class);
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -17,13 +21,23 @@ public class LoadDatabase implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        resetDatabase();
+        try {
+            resetDatabase();
+        } catch (Exception e) {
+            logger.error("Error resetting database", e);
+            throw e;
+        }
     }
 
     @Transactional
     public void resetDatabase() {
-        dropTables();
-        createTables();
+        try {
+            dropTables();
+            createTables();
+        } catch (Exception e) {
+            logger.error("Error resetting database", e);
+            throw e;
+        }
     }
 
     private void dropTables() {
@@ -45,9 +59,31 @@ public class LoadDatabase implements CommandLineRunner {
                         "        RAISE; " +
                         "      END IF; " +
                         "  END; " +
+                        "  BEGIN " +
+                        "    EXECUTE IMMEDIATE 'DROP TABLE monitoring_orders'; " +
+                        "  EXCEPTION " +
+                        "    WHEN OTHERS THEN " +
+                        "      IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
+                        "        RAISE; " +
+                        "      END IF; " +
+                        "  END; " +
                         "END;";
+//                        "  BEGIN " +
+//                        "    EXECUTE IMMEDIATE 'DROP TABLE outbound_cartons'; " +
+//                        "  EXCEPTION " +
+//                        "    WHEN OTHERS THEN " +
+//                        "      IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
+//                        "        RAISE; " +
+//                        "      END IF; " +
+//                        "  END; " +
 
-        entityManager.createNativeQuery(dropTablePLSQL).executeUpdate();
+
+        try {
+            entityManager.createNativeQuery(dropTablePLSQL).executeUpdate();
+        } catch (Exception e) {
+            logger.error("Error executing drop tables SQL", e);
+            throw e;
+        }
     }
 
     private void createTables() {
@@ -76,7 +112,23 @@ public class LoadDatabase implements CommandLineRunner {
                         "  order_status VARCHAR2(50), " +
                         "  last_updated TIMESTAMP)";
 
-        entityManager.createNativeQuery(createOrderTable).executeUpdate();
-        entityManager.createNativeQuery(createSkuTable).executeUpdate();
-        entityManager.createNativeQuery(createMonitoringOrdersTable).executeUpdate();
-    }}
+        String createOutboundCartons =
+                "CREATE TABLE outbound_cartons (" +
+                        "  carton_id NUMBER PRIMARY KEY, " +
+                        "  order_id NUMBER , " +
+                        "  sku VARCHAR2(50), " +
+                        "  quantity NUMBER, " +
+                        "  carton_status VARCHAR2(50), " +
+                        "  last_updated TIMESTAMP)";
+
+        try {
+            entityManager.createNativeQuery(createOrderTable).executeUpdate();
+            entityManager.createNativeQuery(createSkuTable).executeUpdate();
+            entityManager.createNativeQuery(createMonitoringOrdersTable).executeUpdate();
+            entityManager.createNativeQuery(createOutboundCartons).executeUpdate();
+        } catch (Exception e) {
+            logger.error("Error executing create tables SQL", e);
+            throw e;
+        }
+    }
+}

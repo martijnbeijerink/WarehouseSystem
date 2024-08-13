@@ -18,8 +18,8 @@ public class OutboundOrderController {
 
     @PostMapping
     @Operation(summary = "Create a new Outbound Order")
-    public ResponseEntity<OutboundOrder> createOrder(@RequestBody OutboundOrder order) {
-        OutboundOrder savedOrder = service.saveOrder(order); // Use the instance method on the service instance
+    public ResponseEntity<ResponseEntity<?>> createOrder(@RequestBody OutboundOrder order) {
+        ResponseEntity<?> savedOrder = service.saveOrder(order); // Use the instance method on the service instance
         return ResponseEntity.ok(savedOrder);
     }
 }
