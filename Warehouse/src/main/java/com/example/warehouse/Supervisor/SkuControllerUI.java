@@ -1,4 +1,4 @@
-package com.example.warehouse.Supervisor.controller;
+package com.example.warehouse.Supervisor;
 
 import com.example.warehouse.StockManagement.service.SkuService;
 import org.springframework.beans.factory.annotation.Autowired;
