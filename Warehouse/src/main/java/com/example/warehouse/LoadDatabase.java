@@ -1,12 +1,13 @@
 package com.example.warehouse;
 
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -18,84 +19,51 @@ public class LoadDatabase implements CommandLineRunner {
     @PersistenceContext
     private EntityManager entityManager;
 
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public void setDataSource(DataSource dataSource) {
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
+    }
+
     @Override
-    @Transactional // Add this annotation here to wrap the entire operation in a transaction
+    @Transactional // Wrap the entire operation in a transaction
     public void run(String... args) {
         try {
-            // Execute the database reset in separate transactions
-            resetDatabase();
+            resetDatabase(); // Execute the database reset
+            createTrigger(); // Create the trigger
         } catch (Exception e) {
-            logger.error("Error resetting database", e);
+            logger.error("Error during database initialization", e);
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void resetDatabase() {
-        try {
-            dropTables(); // Drop tables in one transaction
-            createTables(); // Create tables in another transaction
-            createTriggers(); // Create triggers in another transaction
-        } catch (Exception e) {
-            logger.error("Error resetting database", e);
-            throw e;
-        }
+        dropTables(); // Drop tables
+        createTables(); // Create tables
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void dropTables() {
-        String dropTablePLSQL =
-                "BEGIN " +
-                        "  BEGIN " +
-                        "    EXECUTE IMMEDIATE 'DROP TABLE outbound_order'; " +
-                        "  EXCEPTION " +
-                        "    WHEN OTHERS THEN " +
-                        "      IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
-                        "        RAISE; " +
-                        "      END IF; " +
-                        "  END; " +
-                        "  BEGIN " +
-                        "    EXECUTE IMMEDIATE 'DROP TABLE sku'; " +
-                        "  EXCEPTION " +
-                        "    WHEN OTHERS THEN " +
-                        "      IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
-                        "        RAISE; " +
-                        "      END IF; " +
-                        "  END; " +
-                        "  BEGIN " +
-                        "    EXECUTE IMMEDIATE 'DROP TABLE monitoring_orders'; " +
-                        "  EXCEPTION " +
-                        "    WHEN OTHERS THEN " +
-                        "      IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
-                        "        RAISE; " +
-                        "      END IF; " +
-                        "  END; " +
-                        "  BEGIN " +
-                        "    EXECUTE IMMEDIATE 'DROP TABLE outbound_cartons'; " +
-                        "  EXCEPTION " +
-                        "    WHEN OTHERS THEN " +
-                        "      IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
-                        "        RAISE; " +
-                        "      END IF; " +
-                        "  END; " +
-                        "  BEGIN " +
-                        "    EXECUTE IMMEDIATE 'DROP TABLE inbound_orders'; " +
-                        "  EXCEPTION " +
-                        "    WHEN OTHERS THEN " +
-                        "      IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
-                        "        RAISE; " +
-                        "      END IF; " +
-                        "  END; " +
-                        "END;";
-        try {
-            entityManager.createNativeQuery(dropTablePLSQL).executeUpdate();
-        } catch (Exception e) {
-            logger.error("Error executing drop tables SQL", e);
-            throw e;
+    private void dropTables() {
+        String[] tableNames = {"outbound_order", "sku", "monitoring_orders", "outbound_cartons", "inbound_order"};
+        for (String tableName : tableNames) {
+            String dropTableSQL = "BEGIN " +
+                    "   EXECUTE IMMEDIATE 'DROP TABLE " + tableName + " CASCADE CONSTRAINTS'; " +
+                    "EXCEPTION " +
+                    "   WHEN OTHERS THEN " +
+                    "       IF SQLCODE != -942 THEN " + // ORA-00942: table or view does not exist
+                    "           RAISE; " +
+                    "       END IF; " +
+                    "END;";
+            try {
+                entityManager.createNativeQuery(dropTableSQL).executeUpdate();
+                logger.info("Dropped table " + tableName + " if it existed.");
+            } catch (Exception e) {
+                logger.error("Error dropping table " + tableName, e);
+                throw e;
+            }
         }
     }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createTables() {
+    private void createTables() {
         String createOrderTable =
                 "CREATE TABLE outbound_order (" +
                         "  id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, " +
@@ -132,12 +100,11 @@ public class LoadDatabase implements CommandLineRunner {
 
         String createInboundOrders =
                 "CREATE TABLE inbound_order (" +
-                        "  inbound_order_id NUMBER GENERATED BY DEFAULT AS IDENTITY, " +
+                        "  inbound_order_id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, " +
                         "  sku VARCHAR2(255) NOT NULL, " +
                         "  quantity NUMBER(10) NOT NULL, " +
                         "  receive_date DATE DEFAULT SYSDATE NOT NULL, " +
-                        "  country_of_origin VARCHAR2(255) NOT NULL, " +
-                        "  PRIMARY KEY (inbound_order_id))";
+                        "  country_of_origin VARCHAR2(255) NOT NULL)";
 
         try {
             entityManager.createNativeQuery(createOrderTable).executeUpdate();
@@ -151,35 +118,66 @@ public class LoadDatabase implements CommandLineRunner {
         }
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createTriggers() {
-        String createTrigger =
-                "BEGIN " +
-                        "    EXECUTE IMMEDIATE 'CREATE OR REPLACE TRIGGER trg_order_update " +
+    private void createTrigger() {
+        String createTriggerSQL =
+                "CREATE OR REPLACE TRIGGER trg_order_update " +
                         "FOR UPDATE OF status ON outbound_order " +
                         "COMPOUND TRIGGER " +
-                        "    l_order_numbers SYS.ODCINUMBERLIST; " +
+
+                        "    -- Declare a collection to hold the order numbers to be processed " +
+                        "    TYPE t_order_numbers IS TABLE OF outbound_order.order_number%TYPE; " +
+                        "    v_order_numbers t_order_numbers := t_order_numbers(); " +
+
                         "    BEFORE EACH ROW IS " +
                         "    BEGIN " +
-                        "        IF :NEW.status = ''ALLOCATED'' THEN " + // Escaped quotes properly
-                        "            l_order_numbers.EXTEND; " +
-                        "            l_order_numbers(l_order_numbers.COUNT) := :NEW.order_number; " +
+                        "        -- Only process the order if the status is changing to 'ALLOCATED' " +
+                        "        IF :NEW.status = 'ALLOCATED' THEN " +
+                        "            v_order_numbers.EXTEND; " +
+                        "            v_order_numbers(v_order_numbers.COUNT) := :NEW.order_number; " +
                         "        END IF; " +
                         "    END BEFORE EACH ROW; " +
+
                         "    AFTER STATEMENT IS " +
                         "    BEGIN " +
-                        "        FOR i IN 1 .. l_order_numbers.COUNT LOOP " +
-                        "            CARTONIZATION.cartonize_orders(l_order_numbers(i)); " +
+                        "        -- Loop through the collected order numbers " +
+                        "        FOR i IN 1..v_order_numbers.COUNT LOOP " +
+                        "            BEGIN " +
+                        "                -- Attempt to log the start of cartonization " +
+                        "                INSERT INTO cartonization_log (operation, message) " +
+                        "                VALUES ('TRG_ORDER_UPDATE', 'Cartonization started for order: ' || v_order_numbers(i)); " +
+
+                        "                -- Call the cartonization procedure " +
+                        "                cartonization.cartonize_orders(v_order_numbers(i)); " +
+
+                        "                -- Log successful cartonization " +
+                        "                INSERT INTO cartonization_log (operation, message) " +
+                        "                VALUES ('TRG_ORDER_UPDATE', 'Cartonization completed for order: ' || v_order_numbers(i)); " +
+                        "            EXCEPTION " +
+                        "                WHEN OTHERS THEN " +
+                        "                    -- Prepare the error message " +
+                        "                    DECLARE " +
+                        "                        v_error_message VARCHAR2(200); " +
+                        "                    BEGIN " +
+                        "                        v_error_message := 'Error: ' || SUBSTR(SQLERRM, 1, 200); " +
+
+                        "                        -- Log the error message " +
+                        "                        INSERT INTO cartonization_log (operation, message) " +
+                        "                        VALUES ('TRG_ORDER_UPDATE', v_error_message); " +
+                        "                    END; " +
+                        "                    RAISE; " +
+                        "            END; " +
                         "        END LOOP; " +
                         "    END AFTER STATEMENT; " +
-                        "END trg_order_update'; " +
-                        "END;";
+
+                        "END trg_order_update;";
 
         try {
-            entityManager.createNativeQuery(createTrigger).executeUpdate();
+            jdbcTemplate.execute(createTriggerSQL);
+            logger.info("Trigger trg_order_update has been created.");
         } catch (Exception e) {
-            logger.error("Error executing create trigger SQL", e);
-            throw e;
+            logger.error("Error creating trigger trg_order_update", e);
+            throw e; // or handle more gracefully
         }
     }
 }
+

@@ -10,10 +10,8 @@ public class SkuAllocationDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public void allocateSkuQuantity(long orderId, String sku, int quantity) {
-        jdbcTemplate.update(
-                "CALL allocate_sku_quantity(?, ?, ?)",
-                orderId, sku, quantity
-        );
+    public void allocateSkuQuantity(String orderId) {
+        jdbcTemplate.update("CALL allocate_sku(?)", orderId);
+
     }
 }

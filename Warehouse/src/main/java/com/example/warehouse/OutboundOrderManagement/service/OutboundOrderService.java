@@ -53,7 +53,7 @@ public class OutboundOrderService {
         OutboundOrder savedOrder = outboundOrderRepository.save(order);
 
         // Allocate SKU quantity and update order status to 'IN-PROGRESS'
-        skuAllocationDao.allocateSkuQuantity(savedOrder.getId(), order.getSku(), order.getQuantity());
+        skuAllocationDao.allocateSkuQuantity(savedOrder.getOrderNumber());
 
         // Return the saved order wrapped in a ResponseEntity
         return ResponseEntity.status(HttpStatus.CREATED).body(savedOrder);
